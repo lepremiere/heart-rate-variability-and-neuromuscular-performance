@@ -14,4 +14,4 @@ Installation:
 
 Usage:
 
-![Image of Yaktocat](https://github.com/lepremiere/random-storage/blob/main/CMJ_Example.png)
+![Image of Yaktocat](https://github.com/lepremiere/random-storage/blob/main/CMJ_Example2.png)
