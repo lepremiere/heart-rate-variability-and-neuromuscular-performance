@@ -14,4 +14,4 @@ Installation:
 
 Usage:
 
-![Getting Started](https://github.com/lepremiere/random-storage/bild1.jpp)
+![Getting Started](https://github.com/lepremiere/random-storage/bild1.jpg)
