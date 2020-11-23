@@ -154,5 +154,5 @@ end
 files(f,:) = [];
 clear('global')
 CMJdata = files;
- end
+end
 
