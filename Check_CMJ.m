@@ -71,7 +71,7 @@ for ii = 1:length(files(:,1))
 
     %% Determining start, takeoff, landing and airtime of CMJ
     % Getting orientation in the jump
-    subzero     = find(Fz_filtered<10);                                                                          % Getting indices of no contact to force plate
+    subzero     = find(Fz_filtered<10);                                                                         % Getting indices of no contact to force plate
     takeoff     = find(Fz_filtered(row:subzero(1)) < threshold,1,'first')+row;                                  % Determines takeoff as first VGRF smaller than baseline noise. +row accounts for subzero offset
     landing     = find(Fz_filtered(takeoff:end) > threshold,1,'first');                                         % Determines landing as first VGRF greater than baseline noise after takeoff
     airtime     = landing*1/Fs;                                                                                 % Landing ontains number of sampling points for the jump
@@ -88,7 +88,7 @@ for ii = 1:length(files(:,1))
     velocity            = cumtrapz((netForce)*1/Fs)/BW;                                         % v = delta(p)/m
     peakVelocity        = max(velocity(start:takeoff));                
     takeoffVelocity     = velocity(takeoff);
-    jumpHeightImpulse   = (takeoffVelocity^2/2*9.81);                                       % h = v^2/2g. In cm (100)
+    jumpHeightImpulse   = (takeoffVelocity^2/2*9.81);                                           % h = v^2/2g. In cm (100)
     Power               = Fz_filtered.*velocity;                                                % W = F*v    
     peakPower           = max(Power(start:takeoff));
     peakForce           = max(Fz_filtered(start:takeoff));

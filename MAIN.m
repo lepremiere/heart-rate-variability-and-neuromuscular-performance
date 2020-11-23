@@ -1,13 +1,13 @@
 %% General Comment
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                                                                                            
-%      
-%
-%
-%
-%
-%
-%
-%
+%                                                                                                                   %
+%                                                                                                                   %
+%                                                                                                                   %
+%                                                                                                                   %
+%                                                                                                                   %
+%                                                                                                                   %
+%                                                                                                                   %
+%                                                                                                                   %
 % Requires external function 'uipickfiles.m' (Copyright (c) 2007, Douglas M. Schwarz)                               % 
 % https://www.mathworks.com/matlabcentral/fileexchange/10867-uipickfiles-uigetfile-on-steroids                      %                                                                                                                           
 %                                                                                                                   %         
@@ -62,8 +62,7 @@ baseline    = 'BASE';
 
 % Specifying names of calculated variables for HRV (1. line), CMJ (2. line), SQV (3. line) and DYNO (4. line) 
 % Note: It is possible to change variable names, but DO NOT alter number of variables, unless specific function output is adjusted,
-%       Names must be unique, 
-%       Capital letters will be displayed as acronym in the graphs section
+%       Names must be unique, Capital letters will be displayed as acronym in the graphs section
 output_variables = {{'HR (1/min)','RR (ms)','SDNN (ms)','RMSSD (ms)','TP (ms²)','VLF (ms²)','LF (ms²)','HF (ms²)','LF/HF (arb.)','SD1 (ms)', 'SD2 (ms)','SD2/SD1 (arb.)','Artifacts (%)'},...
                     {'Body Weight (kg)','Jump Height Airtime (cm)','Jump Height Impulse (cm)','Net Impulse (Ns)','Peak Force (N)', 'rel. Peak Force (N/kg)','Peak Power (W)','TakeOff Velocity (m/s)','Peak Velocity(m/s)','Peak RFD (N/s)','Time to Peak RFD (ms)'},...
                     {'Total Weight (kg)','Mean Propulsive Velocity (m/s)','Intensity MPV (%1RM)','Mean Velocity (m/s)','Intensity MV (%1RM)', 'Peak Velocity (m/s)','Intensity PV (%1RM)','Peak Power Squat (W)'},...
@@ -82,7 +81,7 @@ correlation_Type    = [   3  ,...                       % Options Reproducibilit
     ICC_type        = '3-1';                            % Options: '1-1', '1-k', '2-1', '2-k', '3-1', '3-k'     
     ANCOVA_type     = {'parallel lines',...             % Options Reproducibility:  'parrallel lines' - similar to repeated measures correlation, 'seperate lines' - individual fit
                        'parallel lines'};               % Options Association:      'parrallel lines' - similar to repeated measures correlation, 'seperate lines' - individual fit
-alpha               = 0.1;                             % Alpha level, Type 1 Error rate 
+alpha               = 0.1;                              % Alpha level, Type 1 Error rate 
 NULL                = [   0.875  ,...                   % Reproducibility Null-Hypothesis , Range 0 to 1 (absolute), Inferiority test. Tests if measurement is smaller than NULL
                           0.875     ];                  % Association Null-Hypothesis ,     Range 0 to 1 (absolute), Inferiority test. Tests if measurement is smaller than NULL
 side                = 2;                                % Options: 1 = one-sided test, 2 = two-sided test. For one-sided test, the NULL has to be in the proper direction

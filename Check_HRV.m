@@ -194,7 +194,7 @@ for ii = 1:length(files(:,1))
     vert_line = max(vecnorm(P0-v));                             % Getting length for the line orthogonal to line of identity
     D_line = [mu + D * vert_line, mu - D * vert_line];          % Defining start and end of the line orthogonal to line of identity
 
-    SD1_line = sort([mu , mu + D * SD1], 1);                             % Defining start and end of the SD1 line
+    SD1_line = sort([mu , mu + D * SD1], 1);                    % Defining start and end of the SD1 line
     SD2_line = [mu , mu + abs(u0/norm(u0) * SD2)];              % Defining start and end of the SD2 line
     
     % Plot

@@ -37,16 +37,16 @@ h                      = figure(1);
 %% Looping through files
 for ii = 1:length(files(:,1))
     f = [];
-    data        = files{ii,3};                                    % Getting raw data
-    Fs          = 1/data.Torque.interval;                         % Getting sampling frequency
-    Fc          = 20;                                             % Cut-off frequency
-    [B,A]       = butter(3,(Fc/(Fs/2)/0.8022),'low');             % Calculating coefficients of 3rd order lowpass butterworth filter
-    torque      = filtfilt(B,A,data.Torque.values);               % Filtering torque with zero phase butterworth filter
+    data        = files{ii,3};                                          % Getting raw data
+    Fs          = 1/data.Torque.interval;                               % Getting sampling frequency
+    Fc          = 20;                                                   % Cut-off frequency
+    [B,A]       = butter(3,(Fc/(Fs/2)/0.8022),'low');                   % Calculating coefficients of 3rd order lowpass butterworth filter
+    torque      = filtfilt(B,A,data.Torque.values);                     % Filtering torque with zero phase butterworth filter
     key_presses = data.Keyboard.codes(:,1) == double(ip.key);
-    stim_time   = round((fix(data.Keyboard.times(key_presses)*Fs)),0);         % Getting the indices of stimulations indicated by keyboardpresses
-    time        = [1:length(torque)]./Fs';                        % Getting time in ms or n/Fs    
-    max_stim_w  = 250;                                            % Setting the window following stimulation to analyse peak to peak torque in
-    min_stim_w  = 50;                                             % Setting the window following stimulation to analyse peak to peak torque in
+    stim_time   = round((fix(data.Keyboard.times(key_presses)*Fs)),0);  % Getting the indices of stimulations indicated by keyboardpresses
+    time        = [1:length(torque)]./Fs';                              % Getting time in ms or n/Fs    
+    max_stim_w  = 250;                                                  % Setting the window following stimulation to analyse peak to peak torque in
+    min_stim_w  = 50;                                                   % Setting the window following stimulation to analyse peak to peak torque in
     
     % Error catch function if keypresses do not contained desired key
     if(length(stim_time) == 0)

@@ -156,5 +156,5 @@ end
 files(f,:) = [];
 clear('global')
 SQVdata = files;
- end
+end
 

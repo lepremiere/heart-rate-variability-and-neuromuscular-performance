@@ -92,11 +92,9 @@ df =        [(n * (rep_measures * (num_cycles - 1) - 1) - 1) ,    (n * (rep_meas
               n * (rep_measures *  num_cycles - 1) - 1,            n *(rep_measures  *  num_cycles - 1) - 1];
       
 %%
-for m = [1,2]
-    
+for m = [1,2]   
     subplot(1, 2, m);
     hold on
-
     % Plotting the interpreation categories (r_limits) as grid
     % Plotted as 3D cube, so that these lines are later on top
     for k = [1, -1]
