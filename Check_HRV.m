@@ -227,7 +227,7 @@ for ii = 1:length(files(:,1))
     area(f(find(f>0.04 & f<=0.15)),pxx(find(f>0.04 & f<=0.15)),'FaceColor',[1 0 0],'FaceAlpha',0.4);    % Area for LF
     area(f(find(f>0.15 & f<=0.4)),pxx(find(f>0.15 & f<=0.4)),'FaceColor',[0 0.9 0],'FaceAlpha',0.4);    % Area for HF
     xlabel('Frequency (Hz)');
-    ylabel('PSD (s²/Hz)');
+    ylabel('PSD (sï¿½/Hz)');
     title('FFT spectrum');
     xline(0.04);
     xline(0.15);
