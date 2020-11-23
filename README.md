@@ -9,4 +9,5 @@ Prerequisites:
 
 Installation:
 -   No installation required. Just download all files and place them in your working directory.
+    
     Note: The main scripts will call upon "Functions" folder. This folder needs to be within the same folder as main scripts.
