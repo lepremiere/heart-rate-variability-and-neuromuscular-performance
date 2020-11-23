@@ -14,3 +14,4 @@ Installation:
 
 Usage:
 
+![Getting Started](https://github.com/lepremiere/random-storage/bild1.jp)
