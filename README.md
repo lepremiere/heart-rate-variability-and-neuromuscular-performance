@@ -13,5 +13,4 @@ Installation:
     **Note**: The main scripts will call upon "Functions" folder. This folder needs to be within the same folder as main      scripts.
 
 Usage:
-
-![](https://github.com/lepremiere/random-storage/bild1.jpg?raw=true)
+![Image of Yaktocat](https://github.com/lepremiere/random-storage/blob/main/CMJ_Example.png)
