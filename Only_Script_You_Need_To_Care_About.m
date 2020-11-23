@@ -64,7 +64,7 @@ baseline    = 'BASE';
 % Note: It is possible to change variable names, but DO NOT alter number of variables, unless specific function output is adjusted,
 %       Names must be unique, 
 %       Capital letters will be displayed as acronym in the graphs section
-output_variables = {{'HR (1/min)','RR (ms)','SDNN (ms)','RMSSD (ms)','TP (ms²)','VLF (ms²)','LF (ms²)','HF (ms²)','LF/HF (arb.)','SD1 (ms)', 'SD2 (ms)','SD2/SD1 (arb.)','Artifacts (%)'},...
+output_variables = {{'HR (1/min)','RR (ms)','SDNN (ms)','RMSSD (ms)','TP (msÂ²)','VLF (msÂ²)','LF (msÂ²)','HF (msÂ²)','LF/HF (arb.)','SD1 (ms)', 'SD2 (ms)','SD2/SD1 (arb.)','Artifacts (%)'},...
                     {'Body Weight (kg)','Jump Height Airtime (cm)','Jump Height Impulse (cm)','Net Impulse (Ns)','Peak Force (N)', 'rel. Peak Force (N/kg)','Peak Power (W)','TakeOff Velocity (m/s)','Peak Velocity(m/s)','Peak RFD (N/s)','Time to Peak RFD (ms)'},...
                     {'Total Weight (kg)','Mean Propulsive Velocity (m/s)','Intensity MPV (%1RM)','Mean Velocity (m/s)','Intensity MV (%1RM)', 'Peak Velocity (m/s)','Intensity PV (%1RM)','Peak Power Squat (W)'},...
                     {'Maximum Voluntary Contraction (Nm)','Superimposed Twitch (Nm)','Resting Twitch (Nm)','Voluntary Activation (%)'}};     
@@ -101,6 +101,8 @@ disp_vars           = {[4         ],...                 % Determines the HRV var
                    
 xlabels = {'PRE';'POST24';'POST48';'POST72';...         % Sets the xlabels for individual plots, must match number of phases that will be included due to 'includedPhases',
            'PRE_2';'POST24_2';'POST48_2';'POST72_2';};  % Must match number of measurement repetitions (E.g.: in this study, measurements were conducted 2 times: 'PRE_2')
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Main functions
 % Do not alter following commands, unless you know what you do.
 clc
