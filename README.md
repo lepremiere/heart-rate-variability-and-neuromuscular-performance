@@ -1,6 +1,6 @@
 # Heart-rate-variability-and-neuromuscular-performance
 
-This repository provides the scripts used in "TITLE" (DOI:xxx-xxx). The code is generalized for further usage.
+This repository provides the scripts used in "Heart Rate Variability and Neuromuscular Performance Responses following Resistance Exercise" (https://osf.io/43hnv/). The code is generalized for further usage. 
 
 Prerequisites:
 -   MATLAB R2020b or later
