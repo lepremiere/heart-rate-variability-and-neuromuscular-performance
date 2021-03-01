@@ -2,18 +2,18 @@
 
 This repository provides the scripts used in "Heart Rate Variability and Neuromuscular Performance Responses following Resistance Exercise" (Huick, 2021). The code is generalized for further usage. It processes force plate, dynamometry and heart rate data to calculate heart rate variability and neuromuscular performance metrics. Together with the settings in [Only_Script_You_Need_To_Care_About.m](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/Only_Script_You_Need_To_Care_About.m) and file labels that contain specific information blocks, the script sorts the variables following study logic and present subjects. Information about the correct labeling as well as the codebook for calculated metrics can be found in the supplements section of the reproduction documentation in the project repository (https://osf.io/43hnv/). Heart rate variability and neuromuscular performance markers are then correlated and depending on export settings, data, figures, and tables finally saved to an output folder.
 
-Prerequisites:
+**Prerequisites**:
 -   MATLAB R2020b or later
     -   Signal Processing Toolbox
     -   Statistics and Machine Learning Toolbox
     -   Parrallel Computing Toolbox
 
-Installation:
+**Installation**:
 -   No installation required. Just download all files and place them in your working directory.
     
     **Note**: The main scripts will call upon "Functions" folder. This folder needs to be within the same folder as main scripts.
 
-Usage:
+**Usage**:
 -   Open [Only_Script_You_Need_To_Care_About.m](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/Only_Script_You_Need_To_Care_About.m). The main script consists of two sections, the first inherits settings that are parsed into the main functions in the second section.
 -   Execute the script
     - A GUI opens to select the input files (e.g., [data of the study](https://osf.io/43hnv/))
@@ -22,7 +22,7 @@ Usage:
     - The processesed data is then analyzed by [`DataAnalysis()`](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/Functions/DataAnalysis.m)
     - After selecting the output folder via GUI, the results finally exported by [`Export()`](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/Functions/Export.m)
 
-Settings:
+**Settings**:
 -   Study logic
     - `study_design` is an array of character vectors. The input file labels are compared to this array to identify files of interest and to sort them following the study design. 
     - `output_variables` is an cell array with 4 cell array in it. These cells hold character vectors with the variable names for every variable in every test.
