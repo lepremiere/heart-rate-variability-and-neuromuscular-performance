@@ -14,5 +14,9 @@ Installation:
     **Note**: The main scripts will call upon "Functions" folder. This folder needs to be within the same folder as main scripts.
 
 Usage:
--   Open the [Main Script](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/Only_Script_You_Need_To_Care_About.m)
+-   Open [Only_Script_You_Need_To_Care_About.m](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/Only_Script_You_Need_To_Care_About.m)  The main script consists of two sections, the first inherits settings that are parsed into the main functions
+-   Manipulate settings to match study design and methods      
+-   Execute the script
+    - A GUI opens. Select the input files
+    - Files are imported by main function `ImportData()`
 
