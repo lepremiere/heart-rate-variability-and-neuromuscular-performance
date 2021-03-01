@@ -16,7 +16,7 @@ Installation:
 Usage:
 -   Open [Only_Script_You_Need_To_Care_About.m](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/Only_Script_You_Need_To_Care_About.m). The main script consists of two sections, the first inherits settings that are parsed into the main functions in the second section.
 -   Execute the script
-    - A GUI opens to select the input files (e.g., [data of the study]()
+    - A GUI opens to select the input files (e.g., [data of the study](https://osf.io/43hnv/))
     - Files are imported by main function [`ImportData()`](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/Functions/ImportData.m)
     - The imported data is then processed by [`DataProcessing()`](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/Functions/DataProcessing.m)
     - The processesed data is then analyzed by [`DataAnalysis()`](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/Functions/DataAnalysis.m)
