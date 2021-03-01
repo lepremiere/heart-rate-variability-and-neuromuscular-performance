@@ -1,12 +1,13 @@
-function [reproducibilityResults, associationResults] = DataAnalysis(transformedData, includedPhases, HR_variable, correlation_Type, ICCtype, ANCOVA_type, alpha, NULL, side)
+function [reproducibilityResults, associationResults, corrMatrices]...
+            = DataAnalysis(analysisData, includedPhases, HR_variable, correlation_Type, ICCtype, ANCOVA_type, alpha, NULL, mode)
 % This function statistically analyzes the transformed data w.r.t. the input parameters.
 %
 % USAGE
 % E.g.:
-% [reproducibilityResults, associationResults] = DataAnalysis(transformedData, includedPhases, 4, 3, 'C-1', 'parallel', 0.05, [0.9, 0.9], 1)
+% [reproducibilityResults, associationResults] = DataAnalysis(anaylsisData, includedPhases, 4, 3, 'C-1', 'parallel', 0.05, [0.9, 0.9], 1)
 %
 % INPUT
-% transformedData:          Output table (18x1) from function 'DataProcessing'.
+% anaylsisData:             Output table (18x1) from function 'DataProcessing'.
 % includedPhases:           String array that determines which columns of the input table 
 %                           will be analyzed. Must at least partly match phases declared 
 %                           in 'study_design' used for 'DataProcessing'. Case sensitive.
@@ -64,23 +65,23 @@ missingReps = [];
 
 % Loop through 2 iterations (Absolute, Delta)
 for m = [0,1]
-    clearvars -except mute missingReps err includedPhases HR_variable correlation_Type ICCtype ANCOVA_type alpha NULL side transformedData Association Reproducibility m k 
+    clearvars -except mute missingReps err includedPhases HR_variable correlation_Type ICCtype ANCOVA_type alpha NULL mode analysisData Association Reproducibility m k 
     
     % Loop through 3 iterations (Raw, Percentage, Normalized units)
     for k = 1:3
         
-        data                = transformedData.Results{k + 3*m};                                     % get data accoring to m and k
-        variables           = string(transformedData.Results{'ABS_mean'}.Properties.RowNames);      % gather names of all variables
+        data                = analysisData.Results{k + 3*m};                                        % get data according to m and k
+        variables           = string(analysisData.Results{'ABS_mean'}.Properties.RowNames);         % gather names of all variables
         participants        = unique(data.Participant);                                             % identifying participants
                                                        
         study_design        = string(data.Properties.VariableNames);                                % get study phases of table from column names
         targetPhases        = study_design(find(contains(study_design,includedPhases) == 1));       % only keep phases equal to "includedPhases"
         underscores         = strfind(targetPhases,'_');                                            % find delimeter of phase names
-        analysisData        = data(:,targetPhases);                                                 % cut data with respect to containing "includedPhases"
+        anData              = data(:,targetPhases);                                                 % cut data with respect to containing "includedPhases"
         delta_Phases        = [];
         
         %% Special Case Deltas
-        spaces = cell2mat(strfind(analysisData.Properties.VariableNames, ' '));                     % find all spaces in phase names, which indicates delta phases
+        spaces = cell2mat(strfind(anData.Properties.VariableNames, ' '));                     % find all spaces in phase names, which indicates delta phases
         
         % sum of spaces only > 0 if m = 1, meaning delta data is beeing analyzed
         if(sum(spaces) > 0)                                                                         
@@ -94,16 +95,13 @@ for m = [0,1]
                 % checks if 2 space-separated parts in phase name exist,  
                 % meaning that the phase only includes "includedPhases" and
                 % more than 2 components
-                if(sum(contains(delta_parts, includedPhases)) == 2)
-                
-                    delta_Phases = [delta_Phases, targetPhases(i)];                                 % concatenates all delta phases
-                    
+                if(sum(contains(delta_parts, includedPhases)) == 2)                
+                    delta_Phases = [delta_Phases, targetPhases(i)];                                 % concatenates all delta phases                    
                 end
-            end
-            
-            targetPhases = delta_Phases;                                                            % assigns delta phases to target phases
-            
+            end            
+            targetPhases = delta_Phases;                                                            % assigns delta phases to target phases           
         end
+        
         % error check for insufficient number of recordings in target phases
         if(isempty(targetPhases))
            break; 
@@ -121,7 +119,7 @@ for m = [0,1]
         % Getting data of interest for every study repetition
         for i = 1:numel(num)
                 phaseIndeces{i} = find(numRepetition == num(i));                                    % Identifies the column/phase in data that matches the repeated measures
-                dataOI{i}       = analysisData(:,targetPhases(phaseIndeces{i}));                    % Splits analysisData into subsets of measurement repetitions
+                dataOI{i}       = anData(:,targetPhases(phaseIndeces{i}));                    % Splits analysisData into subsets of measurement repetitions
         end
 
         % Concatenating measurement repetitions for each participant
@@ -161,20 +159,26 @@ for m = [0,1]
             if(i == HR_variable)
                 targetData{i, 3} = [targetData{HR_variable, 2}, targetData{i, 2}(:, 2)]; 
                 targetData{i, 3} = array2table(targetData{i, 3}(sum(~isnan(targetData{i, 3}), 2) == 3, :),...        
-                                        'VariableNames', ['Subjects', variables(HR_variable),variables(i) + '_2']);         % Creates table with association data and labels it
-                targetData{i, 1} = array2table(targetData{i, 1}(sum(~isnan(targetData{i, 1}), 2) == 3, :),...
-                                        'VariableNames', ['Subjects', variables(i),variables(i) + '_2']);                   % Creates table with reproducibility data and labels it 
+                                        'VariableNames', ['Subjects', variables(HR_variable),variables(i) + '_2']); % Creates table with association data and labels it
+                for num_reps = 1:size(targetData{i, 1}, 2)-1
+                    rep_names{num_reps, 1} = [variables(i) + '_' + num2str(num_reps)];
+                end
+                targetData{i, 4} = array2table(targetData{i, 1}(sum(~isnan(targetData{i, 1}), 2) > num_reps, :),...
+                                        'VariableNames', ['Subjects', rep_names{:}]);
             else
                 targetData{i, 3} = [targetData{HR_variable, 2}, targetData{i, 2}(:, 2)];               
                 targetData{i, 3} = array2table(targetData{i, 3}(sum(~isnan(targetData{i, 3}), 2) == 3, :),...
                                         'VariableNames', ['Subjects', variables(HR_variable),variables(i)]); 
-                targetData{i, 1} = array2table(targetData{i, 1}(sum(~isnan(targetData{i, 1}), 2) == 3, :),...
-                                        'VariableNames', ['Subjects', variables(i),variables(i) + '_2']);
+                for num_reps = 1:size(targetData{i, 1}, 2)-1
+                    rep_names{num_reps, 1} = [variables(i) + '_' + num2str(num_reps)];
+                end
+                targetData{i, 4} = array2table(targetData{i, 1}(sum(~isnan(targetData{i, 1}), 2) > num_reps, :),...
+                                        'VariableNames', ['Subjects', rep_names{:}]);
             end
         end
         
         % Final tables
-        reproducibilityData = table(variables,targetData(:,1));
+        reproducibilityData = table(variables,targetData(:,4));
         associationData     = table(variables, targetData(:,3));
 
         %% Reproducibility
@@ -190,58 +194,63 @@ for m = [0,1]
                 for i = 1:size(reproducibilityData,1)
 
                     % Fetching current variable data to table M
-                    M       = reproducibilityData{i,2}{:,:};                                           
+                    M = reproducibilityData{i,2}{:,:};                                           
 
                     % Differentiating between selected analysis method
                     switch correlation_Type(1)
-                        case 1  % Pearson correlation
-                            try
-                                [r, p, LB, UB] = corrcoef(M{:,2:3}, 'Alpha', alpha);                            % Calling upon function corrcoef()
-                                p_NULL = p_approx(r(1,2)*sign(r(1,2)), NULL(1), size(M, 1));                    % Aprroximating p value against NULL with function p_approx()
-                                reproducibilityData{i,3:7}  = [r(1, 2), LB(1, 2), UB(1, 2), p(1,2), p_NULL];    % Concatenating results in cells
+                      case 1  % Pearson correlation
+                            try                             
+                                [r, ~, LB, UB] = corrcoef(M{:,2:3}, 'Alpha', alpha);                                % Calling upon function corrcoef()
+                                [a, b] = p_approx(r(1,2)*sign(r(1,2)),0,size(M, 1),alpha,'Fisher','superiority');   % Aprroximating p value against NULL with function p_approx()
+                                [a_NULL, b_NULL] = p_approx(r(1,2)*sign(r(1,2)),NULL(1),size(M, 1),...              % Aprroximating p value against NULL with function p_approx()
+                                                            alpha,'Fisher',mode{1});                              
+                                reproducibilityData{i,3:9}  = [r(1, 2),LB(1, 2),UB(1, 2),a,1-b,a_NULL,1-b_NULL]; 
                             catch
-                                missingReps = [missingReps, i];
                             end
                         case 2 % Intra-class correlation
                             try
-                                [r, LB, UB, F, df1, df2, p] = ICC(M{:,2:3}, ICCtype, alpha, side, 0);           % Calling upon extern function ICC()
-                                p_NULL = p_approx(r, NULL(1), size(M, 1));                                      % Aprroximating p value against NULL with function p_approx()
-                                reproducibilityData{i,3:10}  = [r, LB, UB, F, df1, df2, p, p_NULL];             % Concatenating results in cells     
-                            catch 
-                                missingReps = [missingReps, i];
+                                [r, LB, UB, F, df1, df2, ~] = ICC(M{:,2:3}, ICCtype, alpha, 2, 0);                  % Calling upon extern function ICC()
+                                [a, b] = p_approx(r,0,size(M, 1),alpha,'Fisher','superiority');                     % Aprroximating p value against NULL with function p_approx()
+                                [a_NULL, b_NULL] = p_approx(r, NULL(1),size(M, 1),alpha,'Fisher',mode{1});          % Aprroximating p value against NULL with function p_approx()
+                                reproducibilityData{i,3:12}  = [r,LB,UB,F,df1,df2, a,1-b,a_NULL,1-b_NULL];    
+                            catch
                             end
-                        case 3 % ANCOVA   
+                        case 3 % ANCOVA 
                             try
-                                names = M.Properties.VariableNames;                                             % Getting column names of table for grouping
-                                [~, atab, ctab, ~] = aoctool(M{:,2}, M{:,3}, M{:,1}, alpha, ...                 % Calling upon ANCOVA with aoctool() with selected type
-                                                             names{2}, names{3}, names{1},...                   % grouping variable = participants
-                                                             'off', ANCOVA_type{1});
-                                r = sqrt(sum([atab{3, 3}])/sum([[atab{3,3}], [atab{end, 3}]]))...               % Calculating correlation coefficient by ignoring subject as dummy variable
-                                    *sign(ctab{find(strcmp(ctab(:, 1), 'Slope')), 2});                          % Only calculating on the explained variance of target variable
-                                F = atab{3, end-1};                                                             % Getting F value for target variable
-                                df = atab{end, 2};                                                              % Getting degrees of freedom for target variable
-                                p = atab{3, end};                                                               % Getting p value for target value, tested against no effect (p0)
-                                [LB, UB] = analyticalCI(r, df, alpha);                                  % Calculating confidence interval by calling upon analyticalCI(), uses Fisher's z transformation
-                                p_NULL = p_approx(r*sign(r), NULL(1), df);                              % Approximating p value for specified NULL hypothesis by calling upon p_approx(), using probability density estimates
+                                names = M.Properties.VariableNames;                                                 % Getting column names of table for grouping
+                                [~, atab, ctab, ~] = aoctool(M{:,2}, M{:,3}, M{:,1}, alpha, ...                     % Calling upon ANCOVA with aoctool() with selected type
+                                                             names{2}, names{3}, names{1},...                       % grouping variable = participants
+                                                             'off', ANCOVA_type{2});
+                                r = sqrt(sum([atab{3, 3}])/sum([[atab{3,3}], [atab{end, 3}]]))...                   % Calculating correlation coefficient by ignoring subject as dummy variable
+                                    *sign(ctab{find(strcmp(ctab(:, 1), 'Slope')), 2});                              % Only calculating on the explained variance of target variable
+                                F = atab{3, end-1};                                                                 % Getting F value for target variable
+                                df = atab{end, 2};                                                                  % Getting degrees of freedom for target variable
+                                [LB, UB] = analyticalCI(r, df, alpha);                                              % Calculating confidence interval by calling analyticalCI()
+                                [a, b] = p_approx(r,0,df,alpha,'Fisher','superiority');                             % Getting p value for target value, tested against no effect
+                                [a_NULL, b_NULL] = p_approx(r*sign(r),NULL(2),df,alpha,'Fisher',mode{1});           % Approximating p value for specified NULL hypothesis by calling upon p_approx(), using probability density estimates
                                 % Adding statistics tables to output
                                 reproducibilityData{i,3:4}   = {array2table(atab(2:end,:), 'VariableNames', atab(1,:)),...
                                                                 array2table(ctab(2:end,:), 'VariableNames', ctab(1,:))};
-                                reproducibilityData{i,5:11}  = [r, LB, UB, F, df, p, p_NULL];                   % Concatenating results in cells   
+                                reproducibilityData{i,5:12}  = [r,LB,UB,df,a,1-b,a_NULL,1-b_NULL];                  % Concatenating results in cells       
                             catch 
-                                missingReps = [missingReps, i];
                             end
                     end  
                 end
 
                 % Selecting names depending on selected correlation type
-                switch correlation_Type(1)
-                    case 1
-                        varNames = {'Variable','ReproducibilityData','r','LB','UB','p(0)',['p(', num2str(NULL(1)), ')']};
-                    case 2
-                        varNames = {'Variable','ReproducibilityData','r','LB','UB','F','df1','df2','p(0)',['p(<', num2str(NULL(1)), ')']};
-                    case 3
-                        varNames = {'Variable','ReproducibilityData', 'AnovaTable', 'CovariationTable', ...
-                                    'r','LB','UB','F','df','p(0)',['p(', num2str(NULL(1)), ')']};
+               switch correlation_Type(1)
+                case 1
+                    varNames = {'Variable','AssociationData','r','LB','UB',...
+                                ['p(',char(945),'|H0(r=0))'],['1 - p(',char(946),'|',char(945),', H0(r=0))'],...
+                                ['p(',char(945),'|H0(|r|>=',num2str(NULL(1)),'))'], ['1 - p(',char(946),'|',char(945),', H0(|r|>=', num2str(NULL(1)),'))']};
+                case 2
+                    varNames = {'Variable','AssociationData','r','LB','UB','F','df1','df2',...
+                                ['p(',char(945),'|H0(r=0))'],['1 - p(',char(946),'|',char(945),', H0(r=0))'],...
+                                ['p(',char(945),'|H0(|r|>=',num2str(NULL(1)),'))'], ['1 - p(',char(946),'|',char(945),', H0(|r|>=', num2str(NULL(1)),'))']};
+                case 3
+                    varNames = {'Variable','AssociationData','AnovaTable','CovariationTable','r','LB','UB','df',...
+                                ['p(',char(945),'|H0(r=0))'],['1 - p(',char(946),'|',char(945),', H0(r=0))'],...
+                                ['p(',char(945),'|H0(|r|>=',num2str(NULL(1)),'))'], ['1 - p(',char(946),'|',char(945),', H0(|r|>=', num2str(NULL(1)),'))']};
                 end
 
                 % Creating output of for reproducibility results
@@ -268,56 +277,63 @@ for m = [0,1]
                 for i = 1:size(associationData,1)
 
                     % Fetching current variable data to table M
-                    M       = associationData{i,2}{:,:};                                           
+                    M = associationData{i,2}{:,:};                                           
 
                     % Differentiating between selected analysis method
-                    switch correlation_Type(1)
+                    switch correlation_Type(2)
                         case 1  % Pearson correlation
-                            try
-                                [r, p, LB, UB] = corrcoef(M{:,2:3}, 'Alpha', alpha);                            % Calling upon function corrcoef()
-                                p_NULL = p_approx(r(1,2)*sign(r(1,2)), NULL(1), size(M, 1));                    % Aprroximating p value against NULL with function p_approx()
-                                associationData{i,3:7}  = [r(1, 2), LB(1, 2), UB(1, 2), p(1, 2), p_NULL];       % Concatenating results in cells
+                            try                                
+                                [r, ~, LB, UB] = corrcoef(M{:,2:3}, 'Alpha', alpha);                                % Calling upon function corrcoef()
+                                [a, b] = p_approx(r(1,2)*sign(r(1,2)),0,size(M, 1),alpha,'Fisher','superiority');   % Aprroximating p value against NULL with function p_approx()
+                                [a_NULL, b_NULL] = p_approx(r(1,2)*sign(r(1,2)),NULL(2),size(M, 1),...              % Aprroximating p value against NULL with function p_approx()
+                                                            alpha,'Fisher',mode{2});  
+                                associationData{i,3:9}  = [r(1, 2),LB(1, 2),UB(1, 2),a,1-b,a_NULL,1-b_NULL];      
                             catch
                             end
                         case 2 % Intra-class correlation
                             try
-                                [r, LB, UB, F, df1, df2, p] = ICC(M{:,2:3}, ICCtype, alpha, side, 0);           % Calling upon extern function ICC()
-                                p_NULL = p_approx(r, NULL(1), size(M, 1));                                      % Aprroximating p value against NULL with function p_approx()
-                                associationData{i,3:10}  = [r, LB, UB, F, df1, df2, p, p_NULL];                 % Concatenating results in cells      
+                                [r, LB, UB, F, df1, df2, ~] = ICC(M{:,2:3}, ICCtype, alpha, 2, 0);                  % Calling upon extern function ICC()
+                                [a, b] = p_approx(r,0,size(M, 1),alpha,'Fisher','superiority');                     % Aprroximating p value against NULL with function p_approx()
+                                [a_NULL, b_NULL] = p_approx(r,NULL(2),size(M, 1),alpha,'Fisher',mode{2});           % Aprroximating p value against NULL with function p_approx()
+                                associationData{i,3:12}  = [r,LB,UB,F,df1,df2,a,1-b,a_NULL,1-b_NULL];   
                             catch
                             end
                         case 3 % ANCOVA 
                             try
-                                names = M.Properties.VariableNames;                                             % Getting column names of table for grouping
-                                [~, atab, ctab, ~] = aoctool(M{:,2}, M{:,3}, M{:,1}, alpha, ...                 % Calling upon ANCOVA with aoctool() with selected type
-                                                             names{2}, names{3}, names{1},...                   % grouping variable = participants
-                                                             'off', ANCOVA_type{1});
-                                r = sqrt(sum([atab{3, 3}])/sum([[atab{3,3}], [atab{end, 3}]]))...               % Calculating correlation coefficient by ignoring subject as dummy variable
-                                    *sign(ctab{find(strcmp(ctab(:, 1), 'Slope')), 2});                          % Only calculating on the explained variance of target variable
-                                F = atab{3, end-1};                                                             % Getting F value for target variable
-                                df = atab{end, 2};                                                              % Getting degrees of freedom for target variable
-                                p = atab{3, end};                                                               % Getting p value for target value, tested against no effect (p0)
-                                [LB, UB] = analyticalCI(r, df, alpha);                                  % Calculating confidence interval by calling upon analyticalCI(), uses Fisher's z transformation
-                                p_NULL = p_approx(r*sign(r), NULL(2), df);                              % Approximating p value for specified NULL hypothesis by calling upon p_approx(), using probability density estimates
+                                names = M.Properties.VariableNames;                                                 % Getting column names of table for grouping
+                                [~, atab, ctab, ~] = aoctool(M{:,2}, M{:,3}, M{:,1}, alpha, ...                     % Calling upon ANCOVA with aoctool() with selected type
+                                                             names{2}, names{3}, names{1},...                       % grouping variable = participants
+                                                             'off', ANCOVA_type{2});
+                                r = sqrt(sum([atab{3, 3}])/sum([[atab{3,3}], [atab{end, 3}]]))...                   % Calculating correlation coefficient by ignoring subject as dummy variable
+                                    *sign(ctab{find(strcmp(ctab(:, 1), 'Slope')), 2});                              % Only calculating on the explained variance of target variable
+                                F = atab{3, end-1};                                                                 % Getting F value for target variable
+                                df = atab{end, 2};                                                                  % Getting degrees of freedom for target variable
+                                [LB, UB] = analyticalCI(r, df, alpha);                                              % Calculating confidence interval by calling analyticalCI()
+                                [a, b] = p_approx(r,0,df,alpha,'Fisher','superiority');                             % Getting p value for target value, tested against no effect
+                                [a_NULL, b_NULL] = p_approx(r*sign(r),NULL(2),df,alpha,'Fisher',mode{2});           % Approximating p value for specified NULL hypothesis by calling upon p_approx(), using probability density estimates
                                 % Adding statistics tables to output
                                 associationData{i,3:4}   = {array2table(atab(2:end,:), 'VariableNames', atab(1,:)),...
                                                                 array2table(ctab(2:end,:), 'VariableNames', ctab(1,:))};
-                                associationData{i,5:11}  = [r, LB, UB, F, df, p, p_NULL];                   % Concatenating results in cells       
+                                associationData{i,5:12}  = [r,LB,UB,df,a,1-b,a_NULL,1-b_NULL];                      % Concatenating results in cells 
                             catch 
-                                aa = 1;
                             end
                     end  
                 end
 
                 % Selecting names depending on selected correlation type
-                switch correlation_Type(1)
+                switch correlation_Type(2)
                     case 1
-                        varNames = {'Variable','AssociationData','r','LB','UB','p(0)',['p(', num2str(NULL(1)), ')']};
+                        varNames = {'Variable','AssociationData','r','LB','UB',...
+                                    ['p(',char(945),'|H0(r=0))'],['1 - p(',char(946),'|',char(945),', H0(r=0))'],...
+                                    ['p(',char(945),'|H0(|r|>=',num2str(NULL(2)),'))'], ['1 - p(',char(946),'|',char(945),', H0(|r|>=', num2str(NULL(2)),'))']};
                     case 2
-                        varNames = {'Variable','AssociationData','r','LB','UB','F','df1','df2','p(0)',['p(<', num2str(NULL(1)), ')']};
+                        varNames = {'Variable','AssociationData','r','LB','UB', 'F', 'df1','df2',...
+                                    ['p(',char(945),'|H0(r=0))'],['1 - p(',char(946),'|',char(945),', H0(r=0))'],...
+                                    ['p(',char(945),'|H0(|r|>=',num2str(NULL(2)),'))'], ['1 - p(',char(946),'|',char(945),', H0(|r|>=', num2str(NULL(2)),'))']};
                     case 3
-                        varNames = {'Variable','AssociationData', 'AnovaTable', 'CovariationTable', ...
-                                    'r','LB','UB','F','df','p(0)',['p(', num2str(NULL(1)), ')']};
+                        varNames = {'Variable','AssociationData', 'AnovaTable', 'CovariationTable','r','LB','UB','df',...
+                                    ['p(',char(945),'|H0(r=0))'],['1 - p(',char(946),'|',char(945),', H0(r=0))'],...
+                                    ['p(',char(945),'|H0(|r|>=',num2str(NULL(2)),'))'], ['1 - p(',char(946),'|',char(945),', H0(|r|>=', num2str(NULL(2)),'))']};
                 end
 
                 % Creating output of for association results
@@ -348,6 +364,7 @@ try
     associationResults     = table(Association(:,1), Association(:,2),...
                                    'VariableNames', {'Absolute', 'Delta'},...
                                    'RowNames', {'Raw', 'Percentage', 'Effect Size'});
+    corrMatrices           = CorrMatrices(analysisData, includedPhases, ANCOVA_type{2});
 catch
     associationResults = [];
 end

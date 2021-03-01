@@ -41,16 +41,16 @@
 
 %% Settings
 addpath([pwd, '\Functions\']);
-fig = figure(1);
+fig = figure('units','normalized','outerposition',[0 0 1 1]);
 set(fig, 'color', 'w');
 titles = {'Reliabity', 'Validity'};
 clf
-
+tic;
 % Options
 default_n = 4;             	% Number of participants
 default_n_sims = 0;         % Upper limit of degrees of freedom for which should be simulated
 default_rep_measures = 4;   % Number of repeated measures within one cycle
-default_num_cycles = 2;     % Number of cycles that the repeated measures are conducted
+default_num_cycles = 1;     % Number of cycles that the repeated measures are conducted
 default_alpha = 0.1;        % Alpha error level for confidence interval calculation
 default_resolution = 1;     % Resolution of the increments to 'n_sims'
 
@@ -77,6 +77,8 @@ resolution = ip.resolution;
 % cycles times 125% 
 if n_sims == 0
     n_sims = n*rep_measures*num_cycles*1.25;
+else
+    n_sims = (n*(rep_measures*n_sims-1)-1)*1.25;
 end
 
 r_OI =      linspace(0, 1, 100);                % Correlation coefficients of interest. Determines the resolution of the x-axis
@@ -90,11 +92,12 @@ r_limits =  [0, 0.2, 0.5, 0.75,  0.9, 0.99;...  % Interpretation limits of corre
 % Additionally, k is multiplied with the number of cycles. 
 df =        [(n * (rep_measures * (num_cycles - 1) - 1) - 1) ,    (n * (rep_measures * (num_cycles - 1) - 1) - 1);...
               n * (rep_measures *  num_cycles - 1) - 1,            n *(rep_measures  *  num_cycles - 1) - 1];
-      
-%%
-for m = [1,2]   
+% Looping       
+for m = [1,2]
+    
     subplot(1, 2, m);
     hold on
+
     % Plotting the interpreation categories (r_limits) as grid
     % Plotted as 3D cube, so that these lines are later on top
     for k = [1, -1]
@@ -167,3 +170,4 @@ for m = [1,2]
         legend( 'df = 0, insufficient sample', 'Location', 'southeast')
     end
 end
+t = toc 

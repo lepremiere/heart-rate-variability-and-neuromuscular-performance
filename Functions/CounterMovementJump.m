@@ -27,8 +27,9 @@ function Results = CounterMovementJump(data)
 %---------------------------------------------------------------------------------------------------
 
 %% Determining total vertical ground reaction force (VGRF)
-% Note: Force plate data must be table with VGRF stored in columns named 'z1-z4' and time stored in last column. Time must be consistent
-Fz = data.z1 + data.z2 + data.z3 + data.z4;
+% Note: Force plate data must be table with VGRF stored in columns with names containing "z" and time stored in last column. Time must be consistent
+inds    = contains(data.Properties.VariableNames, 'z'); % Finding columns with z-forces
+Fz      = sum(data{:,inds}, 2);
 
 % Determines the the sampling frequency 'Fs'
 Fs = 1/(data.(data.Properties.VariableNames{end})(11) - data.(data.Properties.VariableNames{end})(10));
@@ -39,22 +40,18 @@ Fc          = 50;                                   % Cutt-off frequency
 Fz_filtered = filtfilt(b,a,Fz);                     % Filtering VGRF with zero phase lowpass butterworth filter 
 
 %% Adjusting VGRF in case force plate was relocated
-if (mean(Fz_filtered) < 50)
-
+if (mean(Fz_filtered) < 250)
     minimum     = sortrows(Fz_filtered).*-1;        
     relocation  = mean(minimum(1:500));
     Fz_filtered = Fz_filtered + relocation;
-
 end
 
 %% Finding resting VGRF and calculating body weight
-% Note: Force plate data has to include a 3 second rest period
-
+% Note: Force plate data has to include a 3 second resting period
 interval = 100;     % Window width in ms
 
 % Calculating mean and standard deviation for n-windows for the first 2000 ms
 for i = 1:2000 - interval
-    
     if(Fz_filtered(i,1) > 10)
         q(i,1) = std(Fz_filtered(i:i + interval));
         q(i,2) = mean(Fz_filtered(i:i + interval));
@@ -67,9 +64,8 @@ end
 % Finding window with smallest variability (std), assuming to be the best baseline and calculating bodyweight from its mean VGRF
 % Also, sets variability as base line noise
 [row ~]   = find(q(:,1) == min(q(:,1)));
-BW        = q(row,2)/9.81;                      % m = F/a
-noise     = Fz - Fz_filtered;                 
-threshold = range(noise(row:row + interval));   % Sets variability as base line noise
+BW        = mean(Fz_filtered(1:2000)./9.81);    % m = F/a  
+threshold = range(Fz(row:row + interval));      % Sets variability as base line noise
 
 %% Determining start, takeoff, landing and airtime of CMJ
 % Getting orientation in the jump
@@ -77,8 +73,8 @@ subzero     = find(Fz_filtered < 0);                                            
 takeoff     = find(Fz_filtered(row:subzero(1)) < threshold,1,'first')+row;                                    % Determines takeoff as first VGRF smaller than baseline noise. +row accounts for subzero offset
 landing     = find(Fz_filtered(takeoff:end) > threshold,1,'first');                                           % Determines landing as first VGRF greater than baseline noise after takeoff
 airtime     = landing * 1/Fs;                                                                                 % Landing obtains number of sampling points for the jump. By multiplying with sampling frequency, airtime is calculated
-posStart    = find(Fz_filtered(row:subzero(1) - 1) > Fz_filtered(row) + threshold,1,'first') + row - 1000;    % Determines start of movement by finding the first VGRF greater than baseline VGRF + noise. 1000 ms offset 
-negStart    = find(Fz_filtered(row:subzero(1) - 1) < Fz_filtered(row) - threshold,1,'first') + row - 1000;    % Determines start of movement by finding the first VGRF greater than baseline VGRF - noise. 1000 ms offset
+posStart    = find(Fz_filtered(row:subzero(1) - 1) > Fz_filtered(row) + threshold*2,1,'first') + row - 500;   % Determines start of movement by finding the first VGRF greater than baseline VGRF + noise. 500 ms offset 
+negStart    = find(Fz_filtered(row:subzero(1) - 1) < Fz_filtered(row) - threshold*2,1,'first') + row - 500;   % Determines start of movement by finding the first VGRF greater than baseline VGRF - noise. 500 ms offset
 start       = min([posStart,negStart]);                                                                       % Finds true start
 
 %% Calculatng net force and net impulse 
@@ -102,7 +98,11 @@ rfd_interval        = 50;                                                       
 
 % Calculates the RFDs during jump with respect to time
 for i = 1:length(jump)-rfd_interval
-   rFD(i) = ((jump(i+rfd_interval)-jump(i))/rfd_interval)*Fs;
+    if(jump(i) > BW*9.81)
+        rFD(i) = ((jump(i+rfd_interval)-jump(i))/rfd_interval)*Fs;
+    else
+        rFD(i) = 0;
+    end
 end
 
 % Finds max RFD and time to max RFD
@@ -111,6 +111,6 @@ RFD         = max(rFD);
 time2maxRFD = row1;
 
 % Concatenates all variables to ouput 'Results'
-Results = [BW, jumpHeightAirtime, jumpHeightImpulse, netImpulse, peakForce, relpeakForce, peakPower, takeoffVelocity, peakVelocity, RFD, time2maxRFD];   
+Results = [jumpHeightAirtime, jumpHeightImpulse, netImpulse, peakForce, relpeakForce, peakPower, takeoffVelocity, peakVelocity, RFD, time2maxRFD];   
 
 end

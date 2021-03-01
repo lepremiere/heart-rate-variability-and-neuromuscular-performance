@@ -13,22 +13,23 @@ function convertForcePlate()
 % lepremiere
 %---------------------------------------------------------------------------------------------------
 addpath(string(pwd) + '\Functions'); 
+
 % Loads files, finds file name and sets output folder 
 files   = loadFiles ();
 st      = strfind(files{1,1},'\');
 folder  = extractBetween(files{1,1},1,st(end));
 selpath = uigetdir();
+n = length(files(:,1));
 
     % Replaces comma with dot for decimal seperation and writes new tables to
     % output folder
-    for i = 1:length(files(:,1))
-
+    parfor i = 1:n
         data = convertGermanBullshit((files{i,1}));
         dir = join(['\',files{i,2},'.csv']);
         dir = char(dir);
         dir = dir(find(~isspace(dir)));
         writetable(data,[selpath,dir]);
-
+        fprintf('File: %.0f/%.0f \n',i, n);
     end
 end
 
@@ -60,6 +61,6 @@ function Output = loadFiles()
         [~,name,ext] = fileparts(file(i));
         Output{i,1} = file(i);
         Output{i,2} = name; 
-        Output{i,3} = readtable(file(i),'ReadVariableNames',true);
+        Output{i,3} = readtable(file(i),'ReadVariableNames',true, 'PreserveVariableNames', true);
     end
 end

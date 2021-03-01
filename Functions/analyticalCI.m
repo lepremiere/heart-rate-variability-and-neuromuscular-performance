@@ -1,7 +1,7 @@
 function [LB, UB] = analyticalCI(r, n, alpha)
-
 % This function calculates the confidence interval for a given
-% correlation coefficient, sample size and alpha level.
+% correlation coefficient, sample size and alpha level using
+% Fisher's z-transformation.
 %
 % USAGE
 % E.g.:
@@ -10,9 +10,7 @@ function [LB, UB] = analyticalCI(r, n, alpha)
 % INPUT
 % r:        Correlation coefficient for which the confidence interval should
 %           be calculated, limits -1:1
-%
 % n:        Number of observations from which r is estimated
-%
 % alpha:    Maximum type 1 error rate allowed
 %
 % OUTPUT

@@ -9,32 +9,41 @@ function HRVdata = Check_HRV(varargin)
 % HRVdata = Check_HRV('artefact_recognition', 1, 'artefact_threshold', 200, 'detrending', 1) -> Sets parameters
 %
 % INPUT
-% artefact_recognition: 0 = no recognition, 1 = recognition with moving median +- artefact_threshold
+% artefact_recognition: 0 = no artefact correction will be performed. 
+%                       1 = artefacts will be detected by falling out of the mean +- a threshold. 
+%                       2 = artefacts will be recognized by three mechanisms.
+%                           The artefact recognition algorithmn by Lipponen & Tarvainen 
+%                           (2019, https://doi.org/10.1080/03091902.2019.1640306) was rebuild and
+%                           is applied. Additionally, Matlab's 'isoutlier()' function is applied.
+%                           Lastly, a k-means-based algorithm was utilized to fit two gamma
+%                           distributions which provide the final threshold value used alongside
+%                           the a moving mean. (Default)
 % artefact_threshold:   Determines the recognition threshold. In ms.
-% detrending:           0 = no detrending, 1 = detrending with 3rd order polynomial,
+% detrending:           0 = no detrending
+%                       1 = detrending with 3rd order polynomial (Default)
 %                       2 = zero phase butterworth filter cut-off frequency: 0.035 Hz
 %
 % OUTPUT
-% HRVdata:  Cell array (3xn) with filenames, -paths, and data for each selected file will be
-%           returned. Press button next to accept file or discard to drop it.
+% HRVdata:              Cell array (3xn) with filenames, -paths, and data for each selected file
+%                       will be returned. Press button next to accept file or discard to drop it.
 %
 %---------------------------------------------------------------------------------------------------
-% Latest Edit: 01.September.2020
+% Latest Edit: 02.January.2021
 % lepremiere
 %---------------------------------------------------------------------------------------------------
 
 % HRV options
-default_artefact_recognition = 1;     % 0 = no recognition, 1 = recognition with moving median +- artefactThreshold
-default_artefact_threshold   = 200;   % Threshold in ms
+default_artefact_recognition = 2;     % 0 = no recognition, 1 = recognition with moving median +- artefactThreshold
+default_threshold            = 250;   % Threshold in ms
 default_detrending           = 1;     % 0 = no detrending, 1 = detrending with 3rd order polynomial, 2 = zero phase butterworth filter cut-off frequency: 0.035 Hz
-default_median_length        = 14;    % Determines how many points will be used for calculating the median
+default_mean_length          = 30;    % Determines how many points will be used for calculating the median
 
 % Creating input parser and setting default values
 p = inputParser;
 addParameter(p, 'artefact_recognition',  default_artefact_recognition,   @(x) x == 1 || x == 0);
-addParameter(p, 'artefact_threshold',    default_artefact_threshold,     @(x) x >= 1);
+addParameter(p, 'artefact_threshold',    default_threshold,              @(x) x >= 1);
 addParameter(p, 'detrending',            default_detrending,             @(x) x >= 0 && x < 3);
-addParameter(p, 'median_length',         default_median_length,          @(x) x > 0);
+addParameter(p, 'mean_length',           default_mean_length,            @(x) x > 0);
 parse(p, varargin{:});
 ip = p.Results;
 
@@ -46,80 +55,103 @@ files   = loadFiles();                  % Getting files via GUI. Requires extern
 F       = [];
 h       = figure(1);
 
+
 %% Looping through files
 for ii = 1:length(files(:,1))
-
+    clf
     clearvars -except files plots artefact_recognition detrending  ii artefact_threshold input median_length F h ip % Cleaning up after each iteration
-
-    rawdata = table2array(files{ii,3});         % Getting raw data
+    
+    rawdata = table2array(files{ii,3});  
     data    = rawdata;
-    Fs      = 1000;                             % Sampling frequency of HR monitor
-    Fi      = 4;                                % Interpolation frequency for equidistant data
-    time    = cumsum(data)./Fs;                 % Time of RR-recording
-    x       = time(1):1/Fi:time(end);           % Time of interpolation
-    movm    = movmean(data, ip.median_length);   % Moving median. Artifact recognition identifies relying on this value. Window width = 10
-
+    N       = length(data);
+    Fs      = 1000;                                                             % Sampling frequency of HR monitor
+    Fi      = 10;                                                               % Interpolation frequency for equidistant data
+    raw_time_idx = cumsum(data)./Fs;
+    time_idx = raw_time_idx;
+          
     % Artifact recognition. Replaces hits with NaN
-    if(ip.artefact_recognition == 1)
-        for i = 1:length(data)
-            if(range([data(i) , movm(i)]) >= ip.artefact_threshold)
-                data(i) = NaN;
-            else
-                data(i) = data(i);
-            end
+    if(ip.artefact_recognition > 0)
+        
+        if(ip.artefact_recognition == 1)
+            movm = movingmean(data, ip.mean_length);                    % Moving mean
+            idx = sqrt((data - movm).^2) >= ip.threshold;               % Identifying outlier
+            data(idx) = deal(NaN);                                      % Replacing outlier
+        
+        elseif(ip.artefact_recognition == 2)
+            inds = identify_outlier(data);                              % Identifying outlier with custom function
+            tmp_data = data;
+            tmp_data(inds == 0) = deal(NaN);
+            movm = movingmean(tmp_data, ip.mean_length);                % Calculating moving mean without first sweep of outliers
+            [ip.threshold, two_means] = ...                             % Getting threshold for final sweep
+                get_threshold(data(inds), 1, subplot(2,4,8));           
+            idx = sqrt((data - movm).^2) < ip.threshold;                % Getting indeces of values outside of moving mean  +- threshold
+            idx2 = [1; ...                                              % Getting indeces of deltas bigger than  2 times the threshold
+              sqrt((data(2:end) - data(1:end-1)).^2) < 2*ip.threshold]; 
+            idx(sum(idx + idx2 + inds) == 3) = deal(1);                 % Creating logicals for values that were not identified as outlier  
+            data(idx==0) = deal(NaN);                                   % Excluding all values that were identified as outlier
         end
-
-        artefacts = sum(isnan(data))/length(data)*100;        % Calculating artifact ratio in percent
-        data_spline = spline(time, data, x);                  % Cubic spline interpolation
-
+        
         % Replacing NaNs with cubic spline interpolation
+        x       = raw_time_idx(1):1/Fi:raw_time_idx(end)+1;             % Time of interpolation
+        data_spline = ...                                               % Cubic spline interpolation
+            spline(time_idx(~isnan(data)), data(~isnan(data)), x);      
+        artefacts = sum(isnan(data));                                   % Counting artefacts          
+        
         for i = 1:length(data)
-            if(isnan(data(i)))
-                if(i == 1 || i == length(data))
-                    data(i) = nanmean(data);                  % Taking mean if 1st value must be replaced. High starting variability of spline method 
+            if(isnan(data(i)) == 1) 
+                k = find(x >= time_idx(i), 1, 'first');                 % Finding matching time indeces
+                if(range([data_spline(k) movm(i)]) < ip.threshold)      % Replacing NaN with interpolation if not ouside boundaries
+                    data(i) = data_spline(k);                       
                 else
-                    data(i) = data_spline(find(x >= time(i), 1 ,'first'));
+                    data(i) = NaN;                                      % NaN if interpolation not possible
                 end
             end
         end
+        
+        artefacts = artefacts + sum(isnan(data));                       % Counting artefacts
+        time    = time_idx(~isnan(data));                               % New time indeces for frequency analysis
+        x       = time(1):1/Fi:time(end);                               % New time vector for interpolation
+        time_idx = time_idx(~isnan(data));                              % Removing all NaNs from time array
+        data = data(~isnan(data));                                      % Removing all NaNs from array
         data_ac = data;
+        plot_data_ac = data;
+        
     else
         data_ac = rawdata;
         artefacts = 0;
     end
 
     % Calculating HR and mean RR before detrending
-    HR      = 60/(mean(data)/Fs);
-    mean_RR = mean(data);
+    HR      = 60/(nanmean(data)/Fs);
+    mean_RR = nanmean(data);
 
     % Detrending data 
     % DT = 1 applies 3rd order polynomial detrend. DT = 2 applies zero phase butterworth filter 
-    switch ip.detrending
-
-        case 1    
+    switch ip.detrending     
+        case 1  
+        trend = data - detrend(data,3);
         data = detrend(data,3);
-        trend = data_ac - data;
-
+        
         case 2   
         fc          = 0.035;                        % Cutt-off frequency
-        fs          = abs(1/(mean(data)/Fs));       % Average sampling (RR-interval) frequency
+        fs          = abs(1/(nanmean(data)/Fs));    % Average sampling (RR-interval) frequency
         [B,A]       = butter(3,fc/(fs/2)*0.8022);   % Filter coefficients
         data        = data - filtfilt(B,A,data);    % Zero phase filtering
-        trend       = mean(data_ac) + filtfilt(B,A,data);
+        trend       = nanmean(data_ac) + filtfilt(B,A,data);
     end
 
     % Calculating time domain and non-linear indices
     % Note: Non-linear indices are calculated with RMSSD since it is equivalent to SDSD (std(SSD)) if signal is stationary
     SSD     = data(2:end) - data(1:end-1);      % Successive differences
     rMSSD   = sqrt(nanmean(SSD.^2));            % Root mean square of successive RR intervals
-    sDNN    = std(data);                        % Standard deviation of RR intervals
+    sDNN    = nanstd(data);                     % Standard deviation of RR intervals
     
     %% Non-Linear indices
     adj_RR = [data(1:end-1), data(2:end)];
     SD1 = sqrt(1/2 * var(adj_RR(:,1) - adj_RR(:,2))); % Standard deviation perpendicular to line of identity in poincare plot
     SD2 = sqrt(1/2 * var(adj_RR(:,1) + adj_RR(:,2))); % Standard deviation along the line of identity in poincare plot
 
-    %% Calculating frequency domain indecies
+    %% Calculating frequency domain indecies           
     data    = spline(time,data,x);
     n       = length(data);         
     [pxx,f] = pwelch(data./Fs,min([500*Fi,n]),min([500*Fi,n])/2,500*Fi^2,Fi);       % Returns twosided Welch's power density estimate for frequency vector f. 
@@ -132,30 +164,29 @@ for ii = 1:length(files(:,1))
     p(5) = p(3)/p(4);
 
     %% Concatenates results 
-    Results = [floor(HR),floor(mean_RR), sDNN, rMSSD, p(1), p(2), p(3), p(4), p(5), SD1, SD2, SD2/SD1, artefacts];
-
+    Results = [floor(HR),floor(mean_RR), sDNN, rMSSD, p(1), p(2), p(3), p(4), p(5), SD1, SD2, SD2/SD1, (artefacts/N)*100];
+    disp(array2table(Results, 'VariableNames', {'HR','Mean RR', 'SDNN', 'RMSSD', 'TP', 'VLF', 'LF', 'HF', 'LF/HF','SD1','SD2','SD2/SD1', 'Artefacts'}))
     %% Plots
-    legend_names = {'Raw data', 'Median (10)', 'Corrected data', 'Median + threshold ', '3rd Order polynomial'};  
-    clf
+    legend_names = {'Raw data', ['Mean (', num2str(ip.mean_length), ')'], 'Corrected data', 'Mean + threshold ', '3rd Order polynomial'}; 
     leg = [];                                                   % Legend selection helper
     
     % Raw data
     subplot(2,4,[1:4]);
     hold on
-    h(1) = plot(rawdata, '-x');                                 % Raw data             
+    h(1) = plot(raw_time_idx, rawdata, '-x', 'LineWidth', 1.5);                   % Raw data             
     leg = [leg, 1];
-    xlabel('Time (s)')
-    ylabel('RR (ms)')
+    xlabel('Time [s]')
+    ylabel('RR [ms]')
     title(files(ii,2), 'Interpreter', 'none')
     hold off
 
     % Artefact recognition
-    if(ip.artefact_recognition == 1)
+    if(ip.artefact_recognition > 0)
     hold on
-    h(2) = plot(movm,'--');                                     % Moving median
-    h(3) = plot(data_ac,'-o');                                  % Artefact corrected data
-    h(4) = plot(movm - ip.artefact_threshold,'k');              % Moving median threshold boundaries
-    plot(movm + ip.artefact_threshold,'k');
+    h(2) = plot(raw_time_idx, movm,'--', 'LineWidth', 1.5);                       % Moving median
+    h(3) = plot(time_idx, plot_data_ac,'-o', 'LineWidth', 1.5);                   % Artefact corrected data
+    h(4) = plot(raw_time_idx, movm - ip.threshold, 'k', 'LineWidth', 1.5);        % Moving median threshold boundaries
+           plot(raw_time_idx, movm + ip.threshold, 'k', 'LineWidth', 1.5);
     title(['File: ', files{ii,2}], 'Interpreter', 'none');
     hold off
     leg = [leg, 2, 3, 4];
@@ -164,7 +195,7 @@ for ii = 1:length(files(:,1))
     % Detrending
     if(ip.detrending > 0)
         hold on
-        h(5) = plot(trend,'-r');                                % Trend that has been removed
+        h(5) = plot(time_idx, trend,'-r', 'LineWidth', 1.5);                      % Trend that has been removed
         leg = [leg, 5];
         if(ip.detrending == 2)
            legend_names{end} = '0.035Hz Butterworth filter';
@@ -173,9 +204,13 @@ for ii = 1:length(files(:,1))
     end
     
     % Legend
-    names = {'Raw data', 'Median (10)', 'Corrected data', 'Median + threshold '};
+    names = {'Raw data', ['Mean (', num2str(ip.mean_length), ')'], 'Corrected data', 'Median + threshold '};
     legend(h(leg), legend_names(leg), 'Location', 'southeast');
     
+    % Apereance behavior
+    ax = gca;
+    ax.LineWidth = 2;
+    ax.FontWeight = 'bold';
     %% Poincare plot
         
     mu =  mean(adj_RR, 1)';                                     % Get the center of the adjacent RR data
@@ -214,35 +249,40 @@ for ii = 1:length(files(:,1))
     X = mu  + ([SD1 * cos(theta) ; SD2 * sin(theta) ]' *transform )';   % Defining the ellipse coordinates
     plot(X(1,:), X(2,:), 'k', 'LineWidth', 2);                  % Ellipse
     legend([k(1), k(2)], {['SD1: ', num2str(round(SD1, 1))], ['SD2: ', num2str(round(SD2,1))],}, 'Location', 'southeast');
-    xlim([min(data), max(data)]);
-    ylim([min(data), max(data)]);
+    xlim([min([xlim, ylim]), max([xlim, ylim])]);
+    ylim(xlim);
     axis square;
+    
+    % Apereance behavior
+    ax = gca;
+    ax.LineWidth = 2;
+    ax.FontWeight = 'bold';
+    ylabel('RR_j [ms]');
+    xlabel('RR_j_+_1 [ms]');
     grid on;
 
     %% Frequency domains
     subplot(2,4,[5:6])
     hold on
-    plot(f,pxx,'k','HandleVisibility','off');
+    plot(f,pxx,'k','HandleVisibility','off', 'LineWidth', 2);
     area(f(find(f>=0.0 & f<=0.04)),pxx(find(f>=0.00 & f<=0.04)),'FaceColor',[0.7 0.7 0.7]);             % Area for VLF
     area(f(find(f>0.04 & f<=0.15)),pxx(find(f>0.04 & f<=0.15)),'FaceColor',[1 0 0],'FaceAlpha',0.4);    % Area for LF
     area(f(find(f>0.15 & f<=0.4)),pxx(find(f>0.15 & f<=0.4)),'FaceColor',[0 0.9 0],'FaceAlpha',0.4);    % Area for HF
-    xlabel('Frequency (Hz)');
-    ylabel('PSD (sï¿½/Hz)');
+    xlabel('Frequency [Hz]');
+    ylabel('PSD [s²/Hz]');
     title('FFT spectrum');
     xline(0.04);
     xline(0.15);
     xline(0.4);
     ylim([0 max(pxx(30:end))*1.1]);
-    xlim([0 0.5]);
+    xlim([-0.001 0.5]);
     legend('VLF (0-0.04 Hz)','LF (0.04-0.15 Hz)','HF (0.15-0.4 Hz)');
     hold off
-
-    %% Countinuous wavelet function
-    subplot(2,4,8)
-    helperPlotScalogram3d(data,Fi);                             % Continuous wavelet function. MatLab function
-    ylim([0 0.6]);
-    view(290,45);
-    grid on;
+    
+    % Apereance behavior
+    ax = gca;
+    ax.LineWidth = 2;
+    ax.FontWeight = 'bold';
     
     %% Control loop
     c = uicontrol('Position',[10 80 75 50],'String', 'Accept',  'FontSize', 12, 'FontWeight', 'bold', 'BackgroundColor', 'g', 'Callback','uiresume(gcf);');                        % Callback for button accept. uiresume stops script temporarily
@@ -258,3 +298,4 @@ files(F,:)=[];      % Deletes all input files that were discarded
 clear('global')
 HRVdata = files;    % Returns accepted set of files
 end
+

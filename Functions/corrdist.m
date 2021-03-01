@@ -8,10 +8,8 @@ function y = corrdist(r, ro, n)
 % INPUT
 % r:    Vector of possible correlation random variables, i.e. the values at
 %       which the pdf is evaluated at.
-%
 % ro:   The given (true) correlation coefficient, i.e. the population
 %       correlation coefficient. length(ro) > 1 supported.
-%
 % n:    The number of samples in the correlated data. Only length(n) = 1
 %       supported.
 % 
@@ -35,12 +33,13 @@ if( n < 120 )
     
     y = (n-2) * gamma(n-1) * ((1-ro.^2).^((n-1)/2)).* (1-r.^2).^((n-4)/2);
     y = y./ (sqrt(2*pi) * gamma(n-1/2) * (1-ro.*r).^(n-3/2));
-    y = y.* (1+ 1/4*(ro.*r+1)/(2*n-3) + 9/16*(ro.*r+1).^2 / (2*n-1)/(2*n+1));
+    y = y.* (1+ 1/4*(ro.*r+1)/(2*n-1) + 9/16*(ro.*r+1).^2 / (2*n-1)/(2*n+1));
+
     
 else
     
     y = (n-2) * (1-ro.^2)^((n-1)/2) * (1-r.^2).^((n-4)/2);
-    y = y./ (sqrt(2*pi) * (1-ro.*r).^(n-1/2)) * n.^(-1/2);
+    y = y./ (sqrt(2*pi) * (1-ro.*r).^(n-3/2)) * n.^(-1/2);
     y = y.* (1+ 1/4*(ro.*r+1)/(2*n-1) + 9/16*(ro.*r+1).^2 / (2*n-1)/(2*n+1));
     
 end

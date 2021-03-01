@@ -44,7 +44,6 @@ function Results = Dynamomety(data, test_occasions, n)
 Fs    = 1/data.Torque.interval;                         % Getting sampling frequency
 Fc    = 20;                                             % Cut-off frequency
 [B,A] = butter(3,(Fc/(Fs/2)/0.8022), 'low');            % Calculating coefficients of 3rd order lowpass butterworth filter
-
 Torque      = filtfilt(B, A, data.Torque.values);       % Filtering torque with zero phase butterworth filter
 
 %% Identifying stimulations and calculating peak to peak torque
@@ -52,6 +51,7 @@ Stim_number            = numel(data.Keyboard.times);                % Counting n
 Stim_time              = round((fix(data.Keyboard.times*Fs)), 0);   % Getting the indices of stimulations
 maxStimulationWindow   = 250;                                       % Setting the window following stimulation to analyse peak to peak torque in
 minStimulationWindow   = 50;                                        % Setting the window following stimulation to analyse peak to peak torque in
+rfdWindow              = 10;
 
 % Looping through stim times and allocating superimposed and resting stimulation torque as well as maximum voluntary torque (MVC) and voluntary activation (VA)
 % Note: Every 1st stimulation needs to be superimposed and every 2nd the resting stimulation. No extra keypresses allowed
@@ -60,27 +60,26 @@ for i = 1:length(Stim_time)
     % Every second stimulation will be assigned to resting condition
     switch rem(i,2)
         
-    case  1
-        
+    case  1      
         twitchTorqueMVC(floor(i/2)+1,1) = range([min(Torque(Stim_time(i):Stim_time(i) + minStimulationWindow)),...              % Peak to peak torque within superimposed stimulation + window 
                                                  max(Torque(Stim_time(i):Stim_time(i) + maxStimulationWindow))]);    
         if( i <= length(Stim_time) - 1)
-            
             MVC(floor(i/2)+1,1)         = range([max(Torque(Stim_time(i) - maxStimulationWindow*20:Stim_time(i))),...           % Peak to peak torque within stimulation - window*20 (~5s) 
                                                  min(Torque(Stim_time(i + 1):Stim_time(i + 1) + minStimulationWindow))]);
-        end
-        
-    case  0
-        
+        end 
+    case  0 
         twitchTorqueRest(i/2,1)         = range([min(Torque(Stim_time(i):Stim_time(i) + minStimulationWindow)),...              % Peak to peak torque within resting stimulation + window
-                                                 max(Torque(Stim_time(i):Stim_time(i) + maxStimulationWindow))]); 
-                                            
+                                                 max(Torque(Stim_time(i):Stim_time(i) + maxStimulationWindow))]);                                      
         VA(i/2,1)                       = (1 - (twitchTorqueMVC(i/2)*(Torque(Stim_time(i-1))/MVC(i/2))/twitchTorqueRest(i/2)))*100;   % VA = (1 - (superimposed twitch*(Tb/MVC)*resting twitch^-1)) *100.
-                                                                                                                                      % Tb = torque at stiumaltion. Accounts for not stimulation at true maximum torque
+        contraction = Torque(Stim_time(i):Stim_time(i) + maxStimulationWindow);
+        for j = 1:length(contraction) - rfdWindow
+           rfd(j) = (contraction(j+rfdWindow) - contraction(j))/rfdWindow*Fs;
+        end
+        peakRFD_rest(i/2,1) = max(rfd);                                                                                                                              % Tb = torque at stiumaltion. Accounts for not stimulation at true maximum torque
     end
 end
 
-Results = array2table([MVC twitchTorqueMVC twitchTorqueRest VA ]);      
+Results = array2table([MVC, twitchTorqueMVC, twitchTorqueRest, peakRFD_rest, VA ]);      
 
 % Assigning row names for all trials with respect to test occasion
 for i = 1:Stim_number/2

@@ -20,7 +20,8 @@ function Output  = loadFiles()
 
 
 %% Load files
-file = uipickfiles;     % Gets filepath from uipickfiles function. Function 'loadfiles' requires 'uipickfiles.m' (Copyright (c) 2007, Douglas M. Schwarz) --> https://www.mathworks.com/matlabcentral/fileexchange/10867-uipickfiles-uigetfile-on-steroids
+file = uipickfiles;     % Gets filepath from uipickfiles function.
+                        % Function 'loadfiles' requires 'uipickfiles.m' (Copyright (c) 2007, Douglas M. Schwarz) --> https://www.mathworks.com/matlabcentral/fileexchange/10867-uipickfiles-uigetfile-on-steroids
 file = string(file);    
 
 %% Sort files
