@@ -3,9 +3,10 @@
 This repository provides the scripts used in "TITLE" (DOI:xxx-xxx). The code is generalized for further usage.
 
 Prerequisites:
--   MATLAB R2019b or later
+-   MATLAB R2020b or later
     -   Signal Processing Toolbox
     -   Statistics and Machine Learning Toolbox
+    -   Parrallel Computing Toolbox
 
 Installation:
 -   No installation required. Just download all files and place them in your working directory.
@@ -14,4 +15,4 @@ Installation:
 
 Usage:
 
-![Image of Yaktocat](https://github.com/lepremiere/random-storage/blob/main/CMJ_Example2.png)
+
