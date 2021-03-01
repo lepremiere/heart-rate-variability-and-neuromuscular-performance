@@ -18,5 +18,8 @@ Usage:
 -   Manipulate settings to match study design and methods      
 -   Execute the script
     - A GUI opens. Select the input files
-    - Files are imported by main function `ImportData()`
+    - Files are imported by main function [`ImportData()`](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/Functions/ImportData.m)
+    - The imported data is then processed by `DataProcessing()`
+    - The processesed data is then analyzed by `DataAnalysis()`
+    - And the results finally exported by `Export()`
 
