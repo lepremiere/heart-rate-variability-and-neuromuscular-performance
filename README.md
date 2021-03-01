@@ -19,7 +19,7 @@ Usage:
 -   Execute the script
     - A GUI opens. Select the input files
     - Files are imported by main function [`ImportData()`](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/Functions/ImportData.m)
-    - The imported data is then processed by `DataProcessing()`
-    - The processesed data is then analyzed by `DataAnalysis()`
-    - And the results finally exported by `Export()`
+    - The imported data is then processed by [`DataProcessing()`](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/Functions/DataProcessing.m)
+    - The processesed data is then analyzed by [`DataAnalysis()`](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/Functions/DataAnalysis.m)
+    - And the results finally exported by [`Export()`](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/Functions/Export.m)
 
