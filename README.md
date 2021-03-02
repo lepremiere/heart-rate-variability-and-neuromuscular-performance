@@ -23,6 +23,7 @@ This repository provides the scripts used in "Heart Rate Variability and Neuromu
     - After selecting the output folder via GUI, the results are finally exported by [`Export()`](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/Functions/Export.m)
 
 **Settings**:
+
 The first section of [Only_Script_You_Need_To_Care_About.m](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/Only_Script_You_Need_To_Care_About.m) contains settings that can be changed to meet the needs of the investigation
 -   Study logic
     - `study_design` is an 1 x n string array. The input file labels are compared to this array to identify files of interest and to sort them following the study design. 
