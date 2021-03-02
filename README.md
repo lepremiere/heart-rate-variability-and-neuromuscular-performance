@@ -1,12 +1,12 @@
 # Heart-rate-variability-and-neuromuscular-performance
 
-This repository provides the scripts used in "Heart Rate Variability and Neuromuscular Performance Responses following Resistance Exercise" (Huick, 2021). The code is generalized for further usage. It processes force plate, dynamometry and heart rate data to calculate heart rate variability and neuromuscular performance metrics. Together with the settings in [Only_Script_You_Need_To_Care_About.m](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/Only_Script_You_Need_To_Care_About.m) and file labels that contain specific information blocks, the script sorts the variables following study logic and present subjects. Information about the correct labeling as well as the codebook for calculated metrics can be found in the supplements section of the reproduction documentation in the project repository (https://osf.io/43hnv/). Heart rate variability and neuromuscular performance markers are then correlated and depending on export settings, data, figures, and tables finally saved to an output folder.
+This repository provides the scripts used in "Heart Rate Variability and Neuromuscular Performance Responses following Resistance Exercise" (Huick, 2021). It processes force plate, dynamometry and heart rate data to calculate heart rate variability and neuromuscular performance metrics. The code is generalized for further usage. Together with the settings in [Only_Script_You_Need_To_Care_About.m](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/Only_Script_You_Need_To_Care_About.m) and file labels that contain specific information blocks, the script sorts the variables following study logic and present subjects. Information about the correct labeling as well as the codebook for calculated metrics can be found in the supplements section of the reproduction documentation in the project repository (https://osf.io/43hnv/). Heart rate variability and neuromuscular performance markers are then correlated and depending on export settings, data, figures, and tables finally saved to an output folder.
 
 **Prerequisites**:
 -   MATLAB R2020b or later
     -   Signal Processing Toolbox
     -   Statistics and Machine Learning Toolbox
-    -   Parrallel Computing Toolbox (only for [`predicitionErrorEstimation.m`](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/predictionErrorEstimation.m))
+    -   Parrallel Computing Toolbox (only for [`predicitionErrorEstimation()`](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/predictionErrorEstimation.m))
 
 **Installation**:
 -   No installation required. Just download all files and place them in your working directory.
@@ -17,14 +17,14 @@ This repository provides the scripts used in "Heart Rate Variability and Neuromu
 -   Open [Only_Script_You_Need_To_Care_About.m](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/Only_Script_You_Need_To_Care_About.m)
 -   Execute the script
     - A GUI opens to select the input files (e.g., [data of the study](https://osf.io/mt7wg/))
-    - Files are imported by main function [`ImportData()`](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/Functions/ImportData.m)
+    - Files are imported by [`ImportData()`](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/Functions/ImportData.m)
     - The imported data is then processed by [`DataProcessing()`](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/Functions/DataProcessing.m)
     - The processesed data is then analyzed by [`DataAnalysis()`](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/Functions/DataAnalysis.m)
     - After selecting the output folder via GUI, the results are finally exported by [`Export()`](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/Functions/Export.m)
 
 **Settings**:
 
-The first section of [Only_Script_You_Need_To_Care_About.m](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/Only_Script_You_Need_To_Care_About.m) contains settings that can be changed to meet the needs of the investigation
+The first section of [Only_Script_You_Need_To_Care_About.m](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/Only_Script_You_Need_To_Care_About.m) contains settings that can be changed to meet the needs of the investigation.
 -   Study logic
     - `study_design` is an 1 x n string array. The input file labels are compared to this array to identify files of interest and to sort them following the study design. 
     - `output_variables` is an cell array with 4 cell arrays in it. These cells hold character vectors with the variable names for every variable in every test.
@@ -43,6 +43,6 @@ The first section of [Only_Script_You_Need_To_Care_About.m](https://github.com/l
     - `HR_variable` is a scalar that determines the single heart rate variable that the performance metrics should be compared to. The number refers to the position of the desired variable in `output_variables` (e.g., 4 = RMSSD).
 - Export options
     - `export_options` is a 4 x 1 logical vector. Each row enables a certain part of the output. First row: enables the export of importable-, analysis- and individual data in MATLAB formt (e.g., for re-import). Second row: enables the export of summary, statistics and data tables in Excel format. Third row: enables the export of graphical illustrations of the statistics for each correlated metric (time consuming, 5 min.). Fourth row: enables the export of individual and group effect size plots.
-    - `disp_vars` is a cell array that contains 4  integer vectors of maximal length 4. Each vector determines the varibles that should be shown on effect size plots. These integers refer to the `output_variables` vectors. The rows of `disp_vars` match the rows of `output_variables`.
+    - `disp_vars` is a cell array that contains 4  integer vectors of maximal length 4. Each vector determines the varibles that should be shown on effect size plots. These integers refer to the `output_variables` vectors. The rows of `disp_vars` contain the four different tests similar to `output_variables`.
     - `x_labels` is a cell array containing n character vectors. These vectors are used as labels for effect size plots and must therefore equal in number compared to the study phases that are analyzed by the choice of `includedPhases`.
     - `show_baseline` is a logical that determines if the baseline will also be shown on effect size plots.
