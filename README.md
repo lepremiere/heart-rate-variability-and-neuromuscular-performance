@@ -6,7 +6,7 @@ This repository provides the scripts used in "Heart Rate Variability and Neuromu
 -   MATLAB R2020b or later
     -   Signal Processing Toolbox
     -   Statistics and Machine Learning Toolbox
-    -   Parrallel Computing Toolbox
+    -   Parrallel Computing Toolbox (only for [`predicitionErrorEstimation.m`](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/predictionErrorEstimation.m))
 
 **Installation**:
 -   No installation required. Just download all files and place them in your working directory.
@@ -14,18 +14,19 @@ This repository provides the scripts used in "Heart Rate Variability and Neuromu
     **Note**: The main scripts will call upon "Functions" folder. This folder needs to be within the same folder as main scripts.
 
 **Usage**:
--   Open [Only_Script_You_Need_To_Care_About.m](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/Only_Script_You_Need_To_Care_About.m). The main script consists of two sections, the first inherits settings that are parsed into the main functions in the second section.
+-   Open [Only_Script_You_Need_To_Care_About.m](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/Only_Script_You_Need_To_Care_About.m)
 -   Execute the script
-    - A GUI opens to select the input files (e.g., [data of the study](https://osf.io/mt7wg/)
+    - A GUI opens to select the input files (e.g., [data of the study](https://osf.io/mt7wg/))
     - Files are imported by main function [`ImportData()`](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/Functions/ImportData.m)
     - The imported data is then processed by [`DataProcessing()`](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/Functions/DataProcessing.m)
     - The processesed data is then analyzed by [`DataAnalysis()`](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/Functions/DataAnalysis.m)
-    - After selecting the output folder via GUI, the results finally exported by [`Export()`](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/Functions/Export.m)
+    - After selecting the output folder via GUI, the results are finally exported by [`Export()`](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/Functions/Export.m)
 
 **Settings**:
+The first section of [Only_Script_You_Need_To_Care_About.m](https://github.com/lepremiere/heart-rate-variability-and-neuromuscular-performance/blob/main/Only_Script_You_Need_To_Care_About.m) contains settings that can be changed to meet the needs of the investigation
 -   Study logic
-    - `study_design` is an array of character vectors. The input file labels are compared to this array to identify files of interest and to sort them following the study design. 
-    - `output_variables` is an cell array with 4 cell array in it. These cells hold character vectors with the variable names for every variable in every test.
+    - `study_design` is an 1 x n string array. The input file labels are compared to this array to identify files of interest and to sort them following the study design. 
+    - `output_variables` is an cell array with 4 cell arrays in it. These cells hold character vectors with the variable names for every variable in every test.
     - `baseline` is a character vector that contains the phases which should be considered as baseline to normalize variables to it.
 -   Heart rate variability 
     - `artefact_recognition` is a scalar. If it is 0, heart rate data will not be searched for artefacts, if 1 is selected, artefacts are identified by a   moving median ± `artefact_threshold`. With the option 3, a [custom recognition algorithm](https://osf.io/z78jx/) algorithmn is applied. All artefacts are replaced by cubic spline interpolation at 10 Hz. 
