@@ -24,7 +24,7 @@ study_design = ['1_BASE_1',"1_BASE_2","1_BASE_3","1_BASE_4","1_BASE_5","1_BASE_6
 % Note: It is possible to change variable names, but DO NOT alter number of variables, unless specific function output is adjusted,
 %       Names must be unique, units must be included and in brackets '[]',
 %       Capital letters will be displayed as acronym in the graphs section
-output_variables = {{'HR [1/min]','RR [ms]','SDNN [ms]','RMSSD [ms]','TP [ms²]','VLF [ms²]','LF [ms²]','HF [ms²]','LF/HF [arb.]','SD1 [ms]', 'SD2 [ms]','SD2/SD1 [arb.]','Artifacts [%]'},...
+output_variables = {{'HR [1/min]','RR [ms]','SDNN [ms]','RMSSD [ms]','TP [msï¿½]','VLF [msï¿½]','LF [msï¿½]','HF [msï¿½]','LF/HF [arb.]','SD1 [ms]', 'SD2 [ms]','SD2/SD1 [arb.]','Artifacts [%]'},...
                     {'Jump Height Airtime [cm]','Jump Height Impulse [cm]','Net Impulse [Ns]','Peak Force [N]', 'rel. Peak Force [N/kg]','Peak Power [W]','TakeOff Velocity [m/s]','Peak Velocity [m/s]','Peak RFD [N/s]','Time to Peak RFD [ms]'},...
                     {'Mean Propulsive Velocity Squat [m/s]', 'Mean Velocity Squat [m/s]', 'Peak Velocity Squat [m/s]', 'Peak Power Squat [W]', 'Peak RFD Squat [N/s]'},...
                     {'Maximum Voluntary Torque [Nm]','Superimposed Twitch Torque [Nm]','Resting Twitch Torque [Nm]','Peak RTD Rest [Nm/s]','Voluntary Activation [%]'}};       
@@ -77,6 +77,7 @@ disp_vars           = {[4, 8    ],...                   % Determines the HRV var
 xlabels = {'PRE';'POST24';'POST48';'POST72'};...        % Sets the xlabels for individual plots, must match number of phases that will be included due to 'includedPhases',
 show_baseline = 0;                                      % Shows the baseline in individual and group mean effect size plot.
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Main functions
 % Do not alter following commands, unless you know what you do.
 clc
