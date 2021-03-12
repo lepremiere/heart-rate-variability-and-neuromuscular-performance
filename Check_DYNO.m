@@ -108,7 +108,7 @@ for ii = 1:length(files(:,1))
         ylabel('Torque [Nm]');
         xline(time(stim_time(2*i-1)),'','Superimposed','LabelHorizontalAlignment','center','LabelVerticalAlignment','mid','FontWeight','bold');     % Sets vertical line to first (superimposed) stimulation
         xline(time(stim_time(2*i)),'','Resting','LabelHorizontalAlignment','center','LabelVerticalAlignment','mid','FontWeight','bold');            % Sets vertical line to second (resting) stimulation
-        legend(h(1:4), {'Min', 'Max', 'PeakRFD', 'PeakTorque'})
+        legend(h(1:4), {'Min', 'Max', 'PeakRTD', 'PeakTorque'})
         ax = gca;
         ax.FontWeight = 'bold';
         ax.LineWidth = 2;
